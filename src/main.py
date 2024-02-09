@@ -90,7 +90,7 @@ def show_database():
             result.append(row_dict)
         conn.commit()
         conn.close()
-        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps(result, indent=4)}), 200
+        return jsonify({'Status': 'Fetched database successfully.', 'Results': result}), 200
     except sqlite3.Error as e:
         logging.error(e)
         return jsonify({'Status': 'Something went wrong!'}), 500
