@@ -73,18 +73,44 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/clear')
+@app.route('/show')
 @authorize
-def clear_database():
+def show_database():
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            DELETE FROM data;
+            SELECT value, valid
+            FROM data;
         ''')
+        result = cursor.fetchall()
         conn.commit()
         conn.close()
-        logging.info("All data in the table 'data' has been deleted.")
+        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps(result)}), 200
+    except sqlite3.Error as e:
+        logging.error(e)
+        return jsonify({'Status': 'Something went wrong!'}), 500
+
+
+@app.route('/clear/<otp>')
+@authorize
+def clear_database(otp):
+    try:
+        conn = create_connection(database_file)
+        cursor = conn.cursor()
+        if otp == "all":
+            cursor.execute('''
+                DELETE FROM data;
+            ''')
+            logging.info("All data in the table 'data' has been deleted.")
+        else:
+            cursor.execute('''
+                DELETE FROM data 
+                WHERE value = ?;
+                ''', (otp,))
+            logging.info(f"Rows with value '{otp}' deleted successfully.")
+        conn.commit()
+        conn.close()
         return jsonify({'Status': 'Clearing the database worked!'}), 200
     except sqlite3.Error as e:
         logging.error(e)
