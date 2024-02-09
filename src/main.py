@@ -80,7 +80,7 @@ def show_database():
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT value, url, valid
+            SELECT otp, url, valid
             FROM data;
         ''')
         columns = [column[0] for column in cursor.description]
@@ -110,9 +110,9 @@ def clear_database(otp):
         else:
             cursor.execute('''
                 DELETE FROM data 
-                WHERE value = ?;
+                WHERE otp = ?;
                 ''', (otp,))
-            logging.info(f"Rows with value '{otp}' deleted successfully.")
+            logging.info(f"Rows with otp '{otp}' deleted successfully.")
         conn.commit()
         conn.close()
         return jsonify({'Status': 'Clearing the database worked!'}), 200
@@ -169,7 +169,8 @@ def create_table():
         cursor.execute('''
             CREATE TABLE IF NOT EXISTS data (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
-                value TEXT NOT NULL,
+                otp TEXT NOT NULL,
+                url TEXT NOT NULL,
                 valid BOOL NOT NULL
             );
         ''')
@@ -186,7 +187,7 @@ def insert_otp(otp, url, valid=True):
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO data (value, url, valid)
+            INSERT INTO data (otp, url, valid)
             VALUES (?, ?, ?);
         ''', (otp, url, valid))
         conn.commit()
@@ -204,7 +205,7 @@ def update_otp(otp, valid=False):
         cursor.execute('''
                     UPDATE data
                     SET valid = ?
-                    WHERE value = ?;
+                    WHERE otp = ?;
                 ''', (valid, otp))
         conn.commit()
         conn.close()
@@ -213,28 +214,27 @@ def update_otp(otp, valid=False):
         logging.error(e)
 
 
-def check_otp(value):
-    """Check if the provided value matches any entry in the SQLite database."""
+def check_otp(otp):
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT value, valid
+            SELECT otp, valid
             FROM data
-            WHERE value = ?;
-        ''', (value,))
+            WHERE otp = ?;
+        ''', (otp,))
         result = cursor.fetchone()
         conn.close()
 
         if result is not None:
             if result[1] == 1:
-                logging.debug(f"The OTP '{value}' exists in the database and is valid.")
+                logging.debug(f"The OTP '{otp}' exists in the database and is valid.")
                 return True, None
             else:
-                logging.error(f"The OTP '{value}' exist in the database but is not valid anymore.")
+                logging.error(f"The OTP '{otp}' exist in the database but is not valid anymore.")
                 return False, const.DENIED_REASON_EXPIRED
         else:
-            logging.error(f"The OTP '{value}' does not exist in the database.")
+            logging.error(f"The OTP '{otp}' does not exist in the database.")
             return False, const.DENIED_REASON_WRONG
     except sqlite3.Error as e:
         logging.error(e)
