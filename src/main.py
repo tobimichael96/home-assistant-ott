@@ -64,7 +64,7 @@ def login():
 def auth():
     token = google.authorize_access_token()
     session['google_token'] = token
-    return redirect(url_for('generate_link_route'))
+    return redirect(url_for('show_database'))
 
 
 @app.route('/logout')
@@ -86,7 +86,7 @@ def show_database():
         result = cursor.fetchall()
         conn.commit()
         conn.close()
-        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps(result)}), 200
+        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps([dict(ix) for ix in result])}), 200
     except sqlite3.Error as e:
         logging.error(e)
         return jsonify({'Status': 'Something went wrong!'}), 500
