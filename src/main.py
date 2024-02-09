@@ -83,10 +83,14 @@ def show_database():
             SELECT value, valid
             FROM data;
         ''')
-        result = cursor.fetchall()
+        columns = [column[0] for column in cursor.description]
+        result = []
+        for row in cursor.fetchall():
+            row_dict = dict(zip(columns, row))
+            result.append(row_dict)
         conn.commit()
         conn.close()
-        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps([dict(ix) for ix in result])}), 200
+        return jsonify({'Status': 'Fetched database successfully.', 'Results': json.dumps(result, indent=4)}), 200
     except sqlite3.Error as e:
         logging.error(e)
         return jsonify({'Status': 'Something went wrong!'}), 500
