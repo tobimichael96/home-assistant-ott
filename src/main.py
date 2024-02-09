@@ -80,7 +80,7 @@ def show_database():
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT value, valid
+            SELECT value, url, valid
             FROM data;
         ''')
         columns = [column[0] for column in cursor.description]
@@ -125,10 +125,10 @@ def clear_database(otp):
 @authorize
 def generate_link_route():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-    insert_otp(otp)
+    url = f"{request.host_url}open/{otp}"
+    insert_otp(otp, url)
 
-    return jsonify({
-                       'URL': f"{'https://' + os.getenv('BASE_URL') if os.getenv('BASE_URL') is not None else request.host_url}open/{otp}"}), 201
+    return jsonify({'URL': url}), 201
 
 
 @app.route('/open/<otp>')
@@ -180,23 +180,23 @@ def create_table():
         logging.error(e)
 
 
-def insert_otp(value, valid=True):
+def insert_otp(otp, url, valid=True):
     """Insert data into the SQLite database."""
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO data (value, valid)
-            VALUES (?, ?);
-        ''', (value, valid))
+            INSERT INTO data (value, url, valid)
+            VALUES (?, ?, ?);
+        ''', (otp, url, valid))
         conn.commit()
         conn.close()
-        logging.debug(f"Data inserted successfully: OTP '{value}', Valid '{valid}'")
+        logging.debug(f"Data inserted successfully: OTP '{otp}', valid '{valid}'")
     except sqlite3.Error as e:
         logging.error(e)
 
 
-def update_otp(value, valid=False):
+def update_otp(otp, valid=False):
     """Insert data into the SQLite database."""
     try:
         conn = create_connection(database_file)
@@ -205,10 +205,10 @@ def update_otp(value, valid=False):
                     UPDATE data
                     SET valid = ?
                     WHERE value = ?;
-                ''', (valid, value))
+                ''', (valid, otp))
         conn.commit()
         conn.close()
-        logging.debug(f"Data updated successfully: OTP '{value}' changed to valid '{valid}'")
+        logging.debug(f"Data updated successfully: OTP '{otp}' changed to valid '{valid}'")
     except sqlite3.Error as e:
         logging.error(e)
 
