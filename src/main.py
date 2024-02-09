@@ -3,11 +3,11 @@ import logging
 import os
 import random
 import sqlite3
-
-import requests
 from functools import wraps
-from flask import Flask, redirect, url_for, render_template, session, current_app, request, abort, jsonify
+
+import grequests
 from authlib.integrations.flask_client import OAuth
+from flask import Flask, redirect, url_for, session, request, jsonify
 
 import constants as const
 
@@ -123,7 +123,7 @@ def clear_database(otp):
 
 @app.route('/generate')
 @authorize
-def generate_link_route():
+def generate_link():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
     url = f"{request.host_url}open/{otp}"
     insert_otp(otp, url)
@@ -136,13 +136,10 @@ def use_link(otp):
     result, reason = check_otp(otp)
 
     if result:
-        api_call_req = requests.post("https://ha.tmem.de/api/services/automation/trigger",
-                                     headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
-                                              "Content-Type": "application/json"},
-                                     data=json.dumps({"entity_id": os.getenv('HA_AUTOMATION_ID')}))
-        if api_call_req.status_code != 200:
-            logging.error(api_call_req.json())
-            return jsonify({'Status': 'Something went wrong!'}), 500
+        grequests.post("https://ha.tmem.de/api/services/automation/trigger",
+                       headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
+                                "Content-Type": "application/json"},
+                       data=json.dumps({"entity_id": os.getenv('HA_AUTOMATION_ID')}))
         update_otp(otp, False)
         return jsonify({'Status': 'Access granted!'}), 200
     else:
