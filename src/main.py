@@ -5,85 +5,100 @@ import random
 import sqlite3
 
 import requests
-from flask import Flask, redirect, url_for, render_template, flash, session, current_app, request, abort, jsonify
-# from flask_sqlalchemy import SQLAlchemy
-# from flask_login import LoginManager, UserMixin, login_user, logout_user, current_user
-
+from functools import wraps
+from flask import Flask, redirect, url_for, render_template, session, current_app, request, abort, jsonify
+from authlib.integrations.flask_client import OAuth
 
 import constants as const
 
 app = Flask(__name__)
 logging.basicConfig(format='%(asctime)s - %(levelname)s - %(message)s', level=logging.INFO)
+app.secret_key = ''.join([str(random.randint(0, 9)) for _ in range(64)])
+database_file = '/data/database.db'
+allowed_users = os.getenv('ALLOWED_USERS').split(",")
+
+oauth = OAuth(app)
+google = oauth.register(
+    name='google',
+    client_id=os.getenv('CLIENT_ID'),
+    client_secret=os.getenv('CLIENT_SECRET'),
+    authorize_params=None,
+    access_token_params=None,
+    refresh_token_url=None,
+    refresh_token_params=None,
+    scope='email profile',
+    client_kwargs={'scope': 'openid email profile'},
+    server_metadata_url='https://accounts.google.com/.well-known/openid-configuration'
+)
+
+
+def authorize(func):
+    @wraps(func)
+    def wrapper(*args, **kwargs):
+        # Check if user is logged in
+        if 'google_token' in session:
+            user = google.parse_id_token(session['google_token'], None)
+            email = user['email']
+            if email not in allowed_users:
+                return f'Sorry, {email}! You are not allowed.'
+        else:
+            return redirect(url_for('login'))
+
+        # Call the original function if user is allowed
+        return func(*args, **kwargs)
+
+    return wrapper
 
 
 @app.route('/')
-def home():
+def index():
     return redirect("https://www.tobiasmichael.de/", code=302)
 
 
-# @app.route('/authorize/google')
-# def oauth2_authorize():
-#     if not current_user.is_anonymous:
-#         return redirect(url_for('index'))
-#
-#     # generate a random string for the state parameter
-#     session['oauth2_state'] = secrets.token_urlsafe(16)
-#
-#     'google': {
-#         'client_id': os.environ.get('GOOGLE_CLIENT_ID'),
-#         'client_secret': os.environ.get('GOOGLE_CLIENT_SECRET'),
-#         'authorize_url': 'https://accounts.google.com/o/oauth2/auth',
-#         'token_url': 'https://accounts.google.com/o/oauth2/token',
-#         'userinfo': {
-#             'url': 'https://www.googleapis.com/oauth2/v3/userinfo',
-#             'email': lambda json: json['email'],
-#         },
-#         'scopes': ['https://www.googleapis.com/auth/userinfo.email'],
-#     },
-#
-#     # create a query string with all the OAuth2 parameters
-#     qs = urlencode({
-#         'client_id': provider_data['client_id'],
-#         'redirect_uri': url_for('oauth2_callback', provider=provider,
-#                                 _external=True),
-#         'response_type': 'code',
-#         'scope': ' '.join(provider_data['scopes']),
-#         'state': session['oauth2_state'],
-#     })
-#
-#     # redirect the user to the OAuth2 provider authorization URL
-#     return redirect(provider_data['authorize_url'] + '?' + qs)
-
-@app.route('/clear/<token>')
-def clear_database(token):
-    if token == os.getenv("ACCESS_TOKEN"):
-        try:
-            conn = create_connection(database_file)
-            cursor = conn.cursor()
-            cursor.execute('''
-                DELETE FROM data;
-            ''')
-            conn.commit()
-            conn.close()
-            logging.info("All data in the table 'data' has been deleted.")
-            return jsonify({'Status': 'Clearing the database worked!'}), 200
-        except sqlite3.Error as e:
-            logging.error(e)
-            return jsonify({'Status': 'Something went wrong!'}), 500
-    else:
-        return jsonify({'Status': 'Access denied!'}), 403
+@app.route('/login')
+def login():
+    return google.authorize_redirect(redirect_uri=url_for('auth', _external=True))
 
 
-@app.route('/generate/<token>')
-def generate_link_route(token):
-    if token == os.getenv("ACCESS_TOKEN"):
-        otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-        insert_otp(otp)
+@app.route('/oauth2/callback')
+def auth():
+    token = google.authorize_access_token()
+    session['google_token'] = token
+    return redirect(url_for('generate_link_route'))
 
-        return jsonify({
-                           'URL': f"{'https://' + os.getenv('BASE_URL') if os.getenv('BASE_URL') is not None else request.host_url}open/{otp}"}), 201
-    else:
-        return jsonify({'Status': 'Access denied!'}), 403
+
+@app.route('/logout')
+def logout():
+    session.pop('google_token', None)
+    return redirect(url_for('index'))
+
+
+@app.route('/clear')
+@authorize
+def clear_database():
+    try:
+        conn = create_connection(database_file)
+        cursor = conn.cursor()
+        cursor.execute('''
+            DELETE FROM data;
+        ''')
+        conn.commit()
+        conn.close()
+        logging.info("All data in the table 'data' has been deleted.")
+        return jsonify({'Status': 'Clearing the database worked!'}), 200
+    except sqlite3.Error as e:
+        logging.error(e)
+        return jsonify({'Status': 'Something went wrong!'}), 500
+
+
+@app.route('/generate')
+@authorize
+def generate_link_route():
+    otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
+    insert_otp(otp)
+
+    return jsonify({
+                       'URL': f"{'https://' + os.getenv('BASE_URL') if os.getenv('BASE_URL') is not None else request.host_url}open/{otp}"}), 201
 
 
 @app.route('/open/<otp>')
@@ -94,7 +109,7 @@ def use_link(otp):
         api_call_req = requests.post("https://ha.tmem.de/api/services/automation/trigger",
                                      headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
                                               "Content-Type": "application/json"},
-                                     data=json.dumps({"entity_id": f"automation.{os.getenv('HA_AUTOMATION_ID')}"}))
+                                     data=json.dumps({"entity_id": os.getenv('HA_AUTOMATION_ID')}))
         if api_call_req.status_code != 200:
             logging.error(api_call_req.json())
             return jsonify({'Status': 'Something went wrong!'}), 500
@@ -195,12 +210,7 @@ def check_otp(value):
         logging.error(e)
 
 
-def generate_link():
-    return "Link"
-
-
 if __name__ == "__main__":
-    database_file = '/data/database.db'
     try:
         create_table()
     except sqlite3.Error as e:
