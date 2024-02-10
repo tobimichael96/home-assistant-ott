@@ -182,6 +182,7 @@ def trigger(otp):
 
 
 @app.route('/generate')
+@authorize
 def generate():
     return render_template("default.html",
                            url="/generate",  success_result="URL",
