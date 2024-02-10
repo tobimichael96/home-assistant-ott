@@ -7,7 +7,7 @@ from functools import wraps
 from datetime import datetime
 import requests
 from authlib.integrations.flask_client import OAuth
-from flask import Flask, redirect, url_for, session, request, jsonify
+from flask import Flask, redirect, url_for, session, request, jsonify, render_template
 
 import constants as const
 
@@ -75,9 +75,9 @@ def logout():
     return redirect(url_for('index'))
 
 
-@app.route('/show')
+@app.route('/api/show')
 @authorize
-def show_database():
+def api_show_database():
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
@@ -98,9 +98,9 @@ def show_database():
         return jsonify({'Status': 'Something went wrong!'}), 500
 
 
-@app.route('/clear/<otp>')
+@app.route('/api/clear/<otp>')
 @authorize
-def clear_database(otp):
+def api_clear_database(otp):
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
@@ -123,18 +123,18 @@ def clear_database(otp):
         return jsonify({'Status': 'Something went wrong!'}), 500
 
 
-@app.route('/generate')
+@app.route('/api/generate')
 @authorize
-def generate_link():
+def api_generate():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-    url = f"{request.host_url}open/{otp}".replace('http://', 'https://', 1)
+    url = f"{request.host_url}trigger/{otp}".replace('http://', 'https://', 1)
     insert_otp(otp, url)
 
     return jsonify({'URL': url}), 201
 
 
-@app.route('/open/<otp>')
-def use_link(otp):
+@app.route('/api/trigger/<otp>')
+def api_trigger(otp):
     otp_valid, reason = check_otp(otp)
 
     ha_url = f"{os.getenv('HA_URL')}/api/services/"
@@ -159,6 +159,12 @@ def use_link(otp):
             return jsonify({'Status': 'Something went wrong!'}), 500
     else:
         return jsonify({'Status': 'Access denied!', 'Reason': reason}), 403
+
+
+@app.route('/trigger/<otp>')
+@authorize
+def trigger(otp):
+    return render_template("trigger.html", otp=otp)
 
 
 def create_connection(db_file):
