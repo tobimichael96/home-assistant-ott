@@ -66,7 +66,7 @@ def auth():
     if token is None:
         return jsonify({'Status': 'Something went wrong!'}), 500
     session['google_token'] = token
-    return redirect(url_for('show_database'))
+    return redirect(url_for('api_show_database'))
 
 
 @app.route('/logout')
