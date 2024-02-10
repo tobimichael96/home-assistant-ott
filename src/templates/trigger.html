@@ -11,15 +11,17 @@
         $('#api-call-btn').click(function() {
             // Make API call when button is clicked
             $.ajax({
-                type: 'GET',
+                type: 'POST',
                 url: '/api/trigger/{{ otp }}',  // Route to handle API call
                 success: function(response) {
                     console.log('API Response:', response);
                     // Handle API response as needed
+                    $('#summary').html('Result of action: ' + response.status);
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
                     // Handle error response as needed
+                    $('#summary').html('Action was not successful.');
                 }
             });
         });
@@ -27,5 +29,6 @@
 </script>
 <h1>Press the button!</h1>
 <button id="api-call-btn">Action</button>
+<div id="#result"></div>
 </body>
 </html>
