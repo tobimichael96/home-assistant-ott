@@ -12,7 +12,7 @@
             // Make API call when button is clicked
             $.ajax({
                 type: 'GET',
-                url: '/api/open/{{ otp }}',  // Route to handle API call
+                url: '/api/trigger/{{ otp }}',  // Route to handle API call
                 success: function(response) {
                     console.log('API Response:', response);
                     // Handle API response as needed
