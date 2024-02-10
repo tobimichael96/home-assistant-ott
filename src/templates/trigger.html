@@ -55,7 +55,7 @@
                     console.error('Error:', error);
                     console.log('API response:', xhr);
                     // Handle error response as needed
-                    $('#result').html('Action was not successful. ' + xhr.Reason);
+                    $('#result').html('Action was not successful. ' + xhr.responseJSON.Reason);
                 }
             });
         });
