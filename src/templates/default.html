@@ -74,11 +74,11 @@
             // Make API call when button is clicked
             $.ajax({
                 type: 'GET',
-                url: '/api/trigger/{{ otp }}',  // Route to handle API call
+                url: '{{ url }}',  // Route to handle API call
                 success: function(response) {
                     console.log('API status:', response.Status);
                     // Handle API response as needed
-                    $('#success-result').html(response.Status);
+                    $('#success-result').html(response.{{ success_result }});
                     $('#success-box').show();
                 },
                 error: function(xhr, status, error) {
@@ -92,7 +92,7 @@
     });
 </script>
 <div class="container">
-    <h1>Press the button!</h1>
+    <h1>{{ headline }}</h1>
     <button id="api-call-btn">Trigger</button>
     <div class="success-box" id="success-box">
         <div id="success-result">Test</div>

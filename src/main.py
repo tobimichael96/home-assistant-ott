@@ -133,9 +133,15 @@ def api_clear_database(otp):
 @app.route('/api/generate')
 @authorize
 def api_generate():
+    param_dummy = request.args.get("dummy")
+
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
     url = f"{request.host_url}trigger/{otp}".replace('http://', 'https://', 1)
-    insert_otp(otp, url)
+
+    if param_dummy == "true":
+        insert_otp(otp, url, False)
+    else:
+        insert_otp(otp, url, True)
 
     return jsonify({'URL': url}), 201
 
@@ -170,7 +176,16 @@ def api_trigger(otp):
 
 @app.route('/trigger/<otp>')
 def trigger(otp):
-    return render_template("trigger.html", otp=otp)
+    return render_template("default.html",
+                           url=f"/api/trigger/{otp}", success_result="Status",
+                           headline="Press the button to trigger the action!")
+
+
+@app.route('/generate')
+def generate():
+    return render_template("default.html",
+                           url="/generate",  success_result="URL",
+                           headline="Press the button to generate a new token!")
 
 
 def create_connection(db_file):
@@ -209,13 +224,14 @@ def create_table():
 
 def insert_otp(otp, url, valid=True):
     """Insert data into the SQLite database."""
+    current_time = datetime.now().strftime("%H:%M:%S, %d/%m/%y")
     try:
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO data (otp, url, valid, created)
-            VALUES (?, ?, ?, ?);
-        ''', (otp, url, valid, datetime.now().strftime("%H:%M:%S, %d/%m/%y")))
+            INSERT INTO data (otp, url, valid, created, used)
+            VALUES (?, ?, ?, ?, ?);
+        ''', (otp, url, valid, current_time, None if valid else current_time))
         conn.commit()
         conn.close()
         logging.debug(f"Data inserted successfully: OTP '{otp}', valid '{valid}'")
