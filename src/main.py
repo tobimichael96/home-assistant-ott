@@ -53,7 +53,7 @@ def authorize(func):
 
 @app.route('/')
 def index():
-    return redirect("https://www.tobiasmichael.de/", code=302)
+    return 'Nothing to see here.'
 
 
 @app.route('/login')
@@ -64,8 +64,10 @@ def login():
 @app.route('/oauth2/callback')
 def auth():
     token = google.authorize_access_token()
+    if token is None:
+        return jsonify({'Status': 'Something went wrong!'}), 500
     session['google_token'] = token
-    return redirect(url_for('show_database'))
+    return redirect(url_for('index'))
 
 
 @app.route('/logout')
@@ -126,7 +128,7 @@ def clear_database(otp):
 @authorize
 def generate_link():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-    url = f"{request.host_url}open/{otp}"
+    url = f"{request.host_url}open/{otp}".replace('http://', 'https://', 1)
     insert_otp(otp, url)
 
     return jsonify({'URL': url}), 201
