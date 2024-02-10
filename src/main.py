@@ -55,6 +55,11 @@ def index():
     return 'Nothing to see here.'
 
 
+@app.route('/favicon.ico')
+def favicon():
+    return url_for('static', filename='favicon.ico')
+
+
 @app.route('/login')
 def login():
     return google.authorize_redirect(redirect_uri=url_for('auth', _external=True, _scheme='https'))
