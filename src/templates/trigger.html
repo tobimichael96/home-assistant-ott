@@ -47,12 +47,13 @@
                 type: 'GET',
                 url: '/api/trigger/{{ otp }}',  // Route to handle API call
                 success: function(response) {
-                    console.log('API Response:', response);
+                    console.log('API status:', response.Status);
                     // Handle API response as needed
                     $('#result').html('Result of action: ' + response.Status);
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
+                    console.log('API response:', xhr);
                     // Handle error response as needed
                     $('#result').html('Action was not successful. ' + xhr.Reason);
                 }
