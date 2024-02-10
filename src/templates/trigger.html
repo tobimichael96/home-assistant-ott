@@ -4,6 +4,39 @@
     <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
     <meta charset="UTF-8">
     <title>HA-OTT</title>
+    <style>
+        /* Center the content horizontally and vertically */
+        body {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            margin: 0;
+        }
+
+        /* Style the container */
+        .container {
+            text-align: center;
+        }
+
+        /* Style the headline */
+        h1 {
+            text-align: center;
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+
+        /* Style the button */
+        button {
+            padding: 10px 20px;
+            font-size: 18px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+    </style>
 </head>
 <body>
 <script>
@@ -16,7 +49,7 @@
                 success: function(response) {
                     console.log('API Response:', response);
                     // Handle API response as needed
-                    $('#summary').html('Result of action: ' + response.status);
+                    $('#summary').html('Result of action: ' + response.Status);
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
@@ -27,8 +60,10 @@
         });
     });
 </script>
-<h1>Press the button!</h1>
-<button id="api-call-btn">Action</button>
-<div id="#result"></div>
+<div class="container">
+    <h1>Press the button!</h1>
+    <button id="api-call-btn">Trigger</button>
+    <div id="#result"></div>
+</div>
 </body>
 </html>
