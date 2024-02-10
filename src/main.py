@@ -125,7 +125,7 @@ def clear_database(otp):
 @authorize
 def generate_link():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-    url = f"{request.host_url}open/{otp}"
+    url = f"{request.host_url}open/{otp}".replace('http://', 'https://', 1)
     insert_otp(otp, url)
 
     return jsonify({'URL': url}), 201
