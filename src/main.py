@@ -5,8 +5,8 @@ import random
 import sqlite3
 from functools import wraps
 
-import requests
 import grequests
+import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, redirect, url_for, session, request, jsonify
 
@@ -67,7 +67,7 @@ def auth():
     if token is None:
         return jsonify({'Status': 'Something went wrong!'}), 500
     session['google_token'] = token
-    return redirect(url_for('index'))
+    return redirect(url_for('show_database'))
 
 
 @app.route('/logout')
