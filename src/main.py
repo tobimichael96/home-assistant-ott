@@ -3,11 +3,12 @@ import logging
 import os
 import random
 import sqlite3
-from functools import wraps
 from datetime import datetime
+from functools import wraps
+
 import requests
 from authlib.integrations.flask_client import OAuth
-from flask import Flask, redirect, url_for, session, request, jsonify, render_template
+from flask import Flask, redirect, url_for, session, request, jsonify, render_template, send_from_directory
 
 import constants as const
 
@@ -57,7 +58,7 @@ def index():
 
 @app.route('/favicon.ico')
 def favicon():
-    return url_for('static', filename='favicon.ico')
+    return send_from_directory(os.path.join(app.root_path, 'static'), 'favicon.ico')
 
 
 @app.route('/login')
