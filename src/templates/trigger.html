@@ -54,7 +54,7 @@
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
                     // Handle error response as needed
-                    $('#summary').html('Action was not successful.');
+                    $('#summary').html('Action was not successful. ' + xhr.Reason);
                 }
             });
         });
