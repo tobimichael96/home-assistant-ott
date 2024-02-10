@@ -53,7 +53,7 @@
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
-                    console.log('API response:', xhr);
+                    console.log('API response:', xhr.responseJSON);
                     // Handle error response as needed
                     $('#result').html('Action was not successful. ' + xhr.responseJSON.Reason);
                 }
