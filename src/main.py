@@ -126,7 +126,7 @@ def clear_database(otp):
 @authorize
 def generate_link():
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
-    url = f"{request.host_url}open/{otp}".replace('http://', 'https://', 1)
+    url = f"{request.host_url}open/{otp}"
     insert_otp(otp, url)
 
     return jsonify({'URL': url}), 201
@@ -143,7 +143,7 @@ def use_link(otp):
     else:
         ha_entity_id = os.getenv('HA_SCRIPT_ID')
         ha_url = ha_url + 'script/turn_on'
-    logging.info(f"Generated url for home assistant: {ha_url}")
+    logging.debug(f"Generated url for home assistant: {ha_url}")
 
     if result:
         response = requests.post(f"{ha_url}",
