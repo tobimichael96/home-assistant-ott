@@ -162,7 +162,6 @@ def api_trigger(otp):
 
 
 @app.route('/trigger/<otp>')
-@authorize
 def trigger(otp):
     return render_template("trigger.html", otp=otp)
 
