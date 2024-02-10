@@ -14,19 +14,16 @@
             margin: 0;
         }
 
-        /* Style the container */
         .container {
             text-align: center;
         }
 
-        /* Style the headline */
         h1 {
             text-align: center;
             font-size: 24px;
             margin-bottom: 20px;
         }
 
-        /* Style the button */
         button {
             padding: 10px 20px;
             font-size: 18px;
@@ -35,6 +32,26 @@
             border: none;
             cursor: pointer;
             border-radius: 5px;
+        }
+
+        .success-box {
+            display: none;
+            position: relative;
+            background-color: #41d218;
+            color: black;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px;
+        }
+
+        .error-box {
+            display: none;
+            position: relative;
+            background-color: #d21818;
+            color: white;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px;
         }
     </style>
 </head>
@@ -49,12 +66,14 @@
                 success: function(response) {
                     console.log('API status:', response.Status);
                     // Handle API response as needed
-                    $('#result p').html(response.Status);
+                    $('#success-result').html(response.Status);
+                    $('#success-box').show();
                 },
                 error: function(xhr, status, error) {
                     console.log('API reason:', xhr.responseJSON);
                     // Handle error response as needed
-                    $('#result p').html(xhr.responseJSON.Reason);
+                    $('#error-result').html(xhr.responseJSON.Reason);
+                    $('#error-box').show();
                 }
             });
         });
@@ -63,8 +82,11 @@
 <div class="container">
     <h1>Press the button!</h1>
     <button id="api-call-btn">Trigger</button>
-    <div id="result">
-        <p></p>
+    <div class="success-box" id="success-box">
+        <div id="success-result">Test</div>
+    </div>
+    <div class="error-box" id="error-box">
+        <div id="error-result">Test</div>
     </div>
 </div>
 </body>
