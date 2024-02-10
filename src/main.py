@@ -6,6 +6,7 @@ import sqlite3
 from datetime import datetime
 from functools import wraps
 
+import authlib.jose.errors
 import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, redirect, url_for, session, request, jsonify, render_template, send_from_directory
@@ -38,7 +39,10 @@ def authorize(func):
     def wrapper(*args, **kwargs):
         # Check if user is logged in
         if 'google_token' in session:
-            user = google.parse_id_token(session['google_token'], None)
+            try:
+                user = google.parse_id_token(session['google_token'], None)
+            except authlib.jose.errors.ExpiredTokenError:
+                return redirect(url_for('login'))
             email = user['email']
             if email not in allowed_users:
                 return f'Sorry, {email}! You are not allowed.'
@@ -137,13 +141,14 @@ def api_generate():
 
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
     url = f"{request.host_url}trigger/{otp}".replace('http://', 'https://', 1)
+    html_url = f'<a href="{url}" target="_blank">{url}</a>'
 
     if param_dummy == "true":
         insert_otp(otp, url, False)
     else:
         insert_otp(otp, url, True)
 
-    return jsonify({'URL': url}), 201
+    return jsonify({'URL': url, 'HTML_URL': html_url}), 201
 
 
 @app.route('/api/trigger/<otp>')
@@ -185,7 +190,7 @@ def trigger(otp):
 @authorize
 def generate():
     return render_template("default.html",
-                           url="/api/generate",  success_result="URL",
+                           url="/api/generate",  success_result="HTML_URL",
                            headline="Press to generate a new token!")
 
 
