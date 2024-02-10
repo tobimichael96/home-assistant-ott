@@ -178,7 +178,7 @@ def api_trigger(otp):
 def trigger(otp):
     return render_template("default.html",
                            url=f"/api/trigger/{otp}", success_result="Status",
-                           headline="Press the button to trigger the action!")
+                           headline="Press to trigger the action!")
 
 
 @app.route('/generate')
@@ -186,7 +186,7 @@ def trigger(otp):
 def generate():
     return render_template("default.html",
                            url="/generate",  success_result="URL",
-                           headline="Press the button to generate a new token!")
+                           headline="Press to generate a new token!")
 
 
 def create_connection(db_file):

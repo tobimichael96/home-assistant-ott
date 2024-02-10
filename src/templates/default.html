@@ -76,7 +76,7 @@
                 type: 'GET',
                 url: '{{ url }}',  // Route to handle API call
                 success: function(response) {
-                    console.log('API status:', response.Status);
+                    console.log('API status:', response);
                     // Handle API response as needed
                     $('#success-result').html(response.{{ success_result }});
                     $('#success-box').show();
@@ -95,10 +95,10 @@
     <h1>{{ headline }}</h1>
     <button id="api-call-btn">Trigger</button>
     <div class="success-box" id="success-box">
-        <div id="success-result">Test</div>
+        <div id="success-result"></div>
     </div>
     <div class="error-box" id="error-box">
-        <div id="error-result">Test</div>
+        <div id="error-result"></div>
     </div>
 </div>
 </body>
