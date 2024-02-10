@@ -139,7 +139,7 @@ def use_link(otp):
 
     if result:
         grequests.post(
-            f"{os.getenv('HA_URL')}/api/services/ + {'automation/trigger' if os.getenv('HA_AUTOMATION_ID') else 'script/turn_on'}",
+            f"{os.getenv('HA_URL')}/api/services/{'automation/trigger' if os.getenv('HA_AUTOMATION_ID') else 'script/turn_on'}",
             headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
                      "Content-Type": "application/json"},
             data=json.dumps({"entity_id": ha_entity_id}))
