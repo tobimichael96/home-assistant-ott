@@ -4,7 +4,7 @@ import os
 import random
 import sqlite3
 from functools import wraps
-
+from datetime import datetime
 import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, redirect, url_for, session, request, jsonify
@@ -82,7 +82,7 @@ def show_database():
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            SELECT otp, url, valid
+            SELECT otp, url, valid, created, used
             FROM data;
         ''')
         columns = [column[0] for column in cursor.description]
@@ -183,7 +183,9 @@ def create_table():
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 otp TEXT NOT NULL,
                 url TEXT NOT NULL,
-                valid BOOL NOT NULL
+                valid BOOL NOT NULL,
+                created TEXT NOT NULL,
+                used TEXT
             );
         ''')
         conn.commit()
@@ -199,9 +201,9 @@ def insert_otp(otp, url, valid=True):
         conn = create_connection(database_file)
         cursor = conn.cursor()
         cursor.execute('''
-            INSERT INTO data (otp, url, valid)
-            VALUES (?, ?, ?);
-        ''', (otp, url, valid))
+            INSERT INTO data (otp, url, valid, created)
+            VALUES (?, ?, ?, ?);
+        ''', (otp, url, valid, datetime.now().strftime("%H:%M:%S, %d/%m/%y")))
         conn.commit()
         conn.close()
         logging.debug(f"Data inserted successfully: OTP '{otp}', valid '{valid}'")
@@ -216,9 +218,9 @@ def update_otp(otp, valid=False):
         cursor = conn.cursor()
         cursor.execute('''
                     UPDATE data
-                    SET valid = ?
+                    SET valid = ?, used = ?
                     WHERE otp = ?;
-                ''', (valid, otp))
+                ''', (valid, datetime.now().strftime("%H:%M:%S, %d/%m/%y"), otp))
         conn.commit()
         conn.close()
         logging.debug(f"Data updated successfully: OTP '{otp}' changed to valid '{valid}'")
