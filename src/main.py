@@ -185,7 +185,7 @@ def trigger(otp):
 @authorize
 def generate():
     return render_template("default.html",
-                           url="/generate",  success_result="URL",
+                           url="/api/generate",  success_result="URL",
                            headline="Press to generate a new token!")
 
 
