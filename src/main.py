@@ -5,7 +5,6 @@ import random
 import sqlite3
 from functools import wraps
 
-import grequests
 import requests
 from authlib.integrations.flask_client import OAuth
 from flask import Flask, redirect, url_for, session, request, jsonify
@@ -136,7 +135,7 @@ def generate_link():
 
 @app.route('/open/<otp>')
 def use_link(otp):
-    result, reason = check_otp(otp)
+    otp_valid, reason = check_otp(otp)
 
     ha_url = f"{os.getenv('HA_URL')}/api/services/"
     if os.getenv('HA_AUTOMATION_ID'):
@@ -147,14 +146,17 @@ def use_link(otp):
         ha_url = ha_url + 'script/turn_on'
     logging.debug(f"Generated url for home assistant: {ha_url}")
 
-    if result:
+    if otp_valid:
         response = requests.post(f"{ha_url}",
                                  headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
                                           "Content-Type": "application/json"},
                                  data=json.dumps({"entity_id": ha_entity_id}))
-        logging.info(response.json())
         update_otp(otp, False)
-        return jsonify({'Status': 'Access granted!'}), 200
+        if response.status_code == 200:
+            return jsonify({'Status': 'Access granted!'}), 200
+        else:
+            logging.error(f"Something went wrong while calling HA: {response.text}")
+            return jsonify({'Status': 'Something went wrong!'}), 500
     else:
         return jsonify({'Status': 'Access denied!', 'Reason': reason}), 403
 
