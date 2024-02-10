@@ -49,12 +49,12 @@
                 success: function(response) {
                     console.log('API Response:', response);
                     // Handle API response as needed
-                    $('#summary').html('Result of action: ' + response.Status);
+                    $('#result').html('Result of action: ' + response.Status);
                 },
                 error: function(xhr, status, error) {
                     console.error('Error:', error);
                     // Handle error response as needed
-                    $('#summary').html('Action was not successful. ' + xhr.Reason);
+                    $('#result').html('Action was not successful. ' + xhr.Reason);
                 }
             });
         });
