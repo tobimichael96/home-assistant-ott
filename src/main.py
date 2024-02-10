@@ -77,7 +77,7 @@ def auth():
     if token is None:
         return jsonify({'Status': 'Something went wrong!'}), 500
     session['google_token'] = token
-    return redirect(url_for('api_show_database'))
+    return redirect(url_for('generate'))
 
 
 @app.route('/logout')
@@ -141,14 +141,13 @@ def api_generate():
 
     otp = ''.join([str(random.randint(0, 9)) for _ in range(16)])
     url = f"{request.host_url}trigger/{otp}".replace('http://', 'https://', 1)
-    html_url = f'<a href="{url}" target="_blank">{url}</a>'
 
     if param_dummy == "true":
         insert_otp(otp, url, False)
     else:
         insert_otp(otp, url, True)
 
-    return jsonify({'URL': url, 'HTML_URL': html_url}), 201
+    return jsonify({'URL': url}), 201
 
 
 @app.route('/api/trigger/<otp>')
@@ -181,17 +180,13 @@ def api_trigger(otp):
 
 @app.route('/trigger/<otp>')
 def trigger(otp):
-    return render_template("default.html",
-                           url=f"/api/trigger/{otp}", success_result="Status",
-                           headline="Press to trigger the action!")
+    return render_template("trigger.html", url=f"/api/trigger/{otp}")
 
 
 @app.route('/generate')
 @authorize
 def generate():
-    return render_template("default.html",
-                           url="/api/generate",  success_result="HTML_URL",
-                           headline="Press to generate a new token!")
+    return render_template("generate.html", url="/api/generate")
 
 
 def create_connection(db_file):

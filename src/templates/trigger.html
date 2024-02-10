@@ -1,0 +1,105 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <link rel="shortcut icon" href="{{ url_for('static', filename='favicon.ico') }}">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <meta charset="UTF-8">
+    <title>HA-OTT - Trigger</title>
+    <style>
+        /* Reset default margin and padding */
+        body, html {
+            margin: 0;
+            padding: 0;
+        }
+
+        /* Center everything horizontally and vertically */
+        .container {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            text-align: center;
+        }
+
+        h1 {
+            text-align: center;
+            font-size: 2em;
+            margin-bottom: 20px;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 1.5em;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+            border-radius: 5px;
+        }
+
+        .success-box {
+            display: none;
+            position: relative;
+            background-color: #41d218;
+            color: black;
+            font-size: 1em;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px;
+        }
+
+        .error-box {
+            display: none;
+            position: relative;
+            background-color: #d21818;
+            color: white;
+            font-size: 1em;
+            border-radius: 5px;
+            padding: 10px;
+            margin: 20px;
+        }
+    </style>
+</head>
+<body>
+<script>
+    $(document).ready(function() {
+        $('#api-call-btn').click(function() {
+            $('#error-box').hide();
+            $('#success-box').hide();
+            // Make API call when button is clicked
+            $.ajax({
+                type: 'GET',
+                url: '{{ url }}',  // Route to handle API call
+                success: function(response) {
+                    console.log('API status:', response);
+                    // Handle API response as needed
+                    $('#success-result').html(response.Status);
+                    $('#success-box').show();
+                },
+                error: function(xhr, status, error) {
+                    console.log('API reason:', xhr.responseJSON);
+                    // Handle error response as needed
+                    $('#error-result').html(xhr.responseJSON.Reason);
+                    $('#error-box').show();
+                }
+            });
+        });
+    });
+</script>
+<div class="container">
+    <h1>Press to trigger the action.</h1>
+    <button id="api-call-btn">Trigger</button>
+    <div class="success-box" id="success-box">
+        <div id="success-result"></div>
+    </div>
+    <div class="error-box" id="error-box">
+        <div id="error-result"></div>
+    </div>
+</div>
+</body>
+</html>
