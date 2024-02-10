@@ -135,14 +135,20 @@ def generate_link():
 def use_link(otp):
     result, reason = check_otp(otp)
 
-    ha_entity_id = os.getenv('HA_AUTOMATION_ID') if os.getenv('HA_AUTOMATION_ID') else os.getenv('HA_SCRIPT_ID')
+    ha_url = f"{os.getenv('HA_URL')}/api/services/"
+    if os.getenv('HA_AUTOMATION_ID'):
+        ha_entity_id = os.getenv('HA_AUTOMATION_ID')
+        ha_url = ha_url + 'automation/trigger'
+    else:
+        ha_entity_id = os.getenv('HA_SCRIPT_ID')
+        ha_url = ha_url + 'script/turn_on'
+    logging.info(f"Generated url for home assistant: {ha_url}")
 
     if result:
-        grequests.post(
-            f"{os.getenv('HA_URL')}/api/services/{'automation/trigger' if os.getenv('HA_AUTOMATION_ID') else 'script/turn_on'}",
-            headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
-                     "Content-Type": "application/json"},
-            data=json.dumps({"entity_id": ha_entity_id}))
+        grequests.post(f"{ha_url}",
+                       headers={"Authorization": f"Bearer {os.getenv('HA_TOKEN')}",
+                                "Content-Type": "application/json"},
+                       data=json.dumps({"entity_id": ha_entity_id}))
         update_otp(otp, False)
         return jsonify({'Status': 'Access granted!'}), 200
     else:
